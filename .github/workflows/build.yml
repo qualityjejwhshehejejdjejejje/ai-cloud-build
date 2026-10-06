@@ -42,18 +42,18 @@ jobs:
       - name: Build exe
         if: github.event.inputs.target == 'exe'
         run: |
+          set -o pipefail
           mkdir -p output
           if [ "${{ github.event.inputs.lang }}" = "cpp" ]; then
             x86_64-w64-mingw32-g++ -O2 -static -Wall -Wextra src/*.cpp -o output/app.exe 2>&1 | tee output/build.log
-            echo "EXIT=${PIPESTATUS[0]}" >> output/build.log
           else
             x86_64-w64-mingw32-gcc -O2 -static -Wall -Wextra src/*.c -o output/app.exe 2>&1 | tee output/build.log
-            echo "EXIT=${PIPESTATUS[0]}" >> output/build.log
           fi
 
       - name: Build apk
         if: github.event.inputs.target == 'apk'
         run: |
+          set -o pipefail
           mkdir -p output
           python3 scripts/apk_build.py template src output/app.apk "$ANDROID_HOME" 2>&1 | tee output/build.log
 
