@@ -1,0 +1,67 @@
+name: Cloud Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        type: choice
+        description: 构建目标
+        options:
+          - exe
+          - apk
+        required: true
+      lang:
+        type: choice
+        description: 编程语言（仅 exe）
+        options:
+          - c
+          - cpp
+        default: c
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mingw-w64
+        if: github.event.inputs.target == 'exe'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64
+
+      - name: Setup Android SDK
+        if: github.event.inputs.target == 'apk'
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'build-tools;34.0.0'
+
+      - name: Build exe
+        if: github.event.inputs.target == 'exe'
+        run: |
+          mkdir -p output
+          if [ "${{ github.event.inputs.lang }}" = "cpp" ]; then
+            x86_64-w64-mingw32-g++ -O2 -static -Wall -Wextra src/*.cpp -o output/app.exe 2>&1 | tee output/build.log
+            echo "EXIT=${PIPESTATUS[0]}" >> output/build.log
+          else
+            x86_64-w64-mingw32-gcc -O2 -static -Wall -Wextra src/*.c -o output/app.exe 2>&1 | tee output/build.log
+            echo "EXIT=${PIPESTATUS[0]}" >> output/build.log
+          fi
+
+      - name: Build apk
+        if: github.event.inputs.target == 'apk'
+        run: |
+          mkdir -p output
+          python3 scripts/apk_build.py template src output/app.apk "$ANDROID_HOME" 2>&1 | tee output/build.log
+
+      - name: Commit output
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A output
+          git commit -m "build output: ${{ github.event.inputs.target }}" || echo "no changes"
+          git push
