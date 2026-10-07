@@ -1,235 +1,217 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>今日专注</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>我的待办清单</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { height:100%; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
-    background:linear-gradient(160deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%);
-    color:#f5f3ff; min-height:100%;
-    display:flex; flex-direction:column; padding:20px 18px 90px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #6a5acd, #4834d4);
+    min-height: 100vh;
+    padding: 20px 16px 80px;
+    color: #fff;
   }
-  .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
-  .title { font-size:22px; font-weight:700; letter-spacing:1px; }
-  .date { font-size:12px; opacity:.7; }
+  .header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .header h1 { font-size: 26px; font-weight: 600; }
+  .header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }
 
-  .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
-  .card {
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
-    border-radius:16px; padding:14px; backdrop-filter:blur(8px);
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
   }
-  .card .num { font-size:28px; font-weight:800; }
-  .card .label { font-size:12px; opacity:.75; margin-top:4px; }
-  .card.purple .num { color:#c4b5fd; }
-  .card.green .num { color:#86efac; }
+  #todoInput {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    background: rgba(255,255,255,0.95);
+    color: #333;
+    outline: none;
+  }
+  #addBtn {
+    padding: 0 22px;
+    border: none;
+    border-radius: 12px;
+    background: #ffd166;
+    color: #4a3b00;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+  }
 
-  .section { margin-bottom:18px; }
-  .section h2 {
-    font-size:13px; text-transform:uppercase; letter-spacing:2px;
-    opacity:.65; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;
+  .stats {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-bottom: 10px;
   }
-  .add-row { display:flex; gap:8px; margin-bottom:10px; }
-  input[type=text] {
-    flex:1; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15);
-    border-radius:10px; padding:11px 12px; color:#fff; font-size:15px; outline:none;
-  }
-  input[type=text]::placeholder { color:rgba(255,255,255,.45); }
-  input[type=text]:focus { border-color:#a78bfa; }
-  button.primary {
-    background:#7c3aed; color:#fff; border:none; border-radius:10px;
-    padding:0 18px; font-size:15px; font-weight:600; cursor:pointer;
-  }
-  button.primary:active { background:#6d28d9; }
 
-  ul.todo { list-style:none; display:flex; flex-direction:column; gap:8px; }
-  li.todo-item {
-    display:flex; align-items:center; gap:10px;
-    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
-    border-radius:12px; padding:12px;
-    transition:all .25s;
+  #list { list-style: none; }
+  #list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.95);
+    color: #333;
+    padding: 14px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
-  li.todo-item.done { opacity:.55; }
-  li.todo-item.done .txt { text-decoration:line-through; }
+  #list li.done .text {
+    text-decoration: line-through;
+    color: #999;
+  }
   .check {
-    width:22px; height:22px; border:2px solid rgba(255,255,255,.4);
-    border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
+    width: 24px; height: 24px;
+    border: 2px solid #6a5acd;
+    border-radius: 50%;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
   }
-  li.done .check { background:#86efac; border-color:#86efac; }
-  li.done .check::after { content:"✓"; color:#1e1b4b; font-weight:800; font-size:14px; }
-  .txt { flex:1; font-size:15px; word-break:break-all; }
-  .del { background:none; border:none; color:#fca5a5; font-size:18px; cursor:pointer; padding:2px 6px; }
-
-  .empty { text-align:center; opacity:.5; font-size:13px; padding:16px 0; }
-
-  /* Timer */
-  .timer {
-    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
-    border-radius:20px; padding:22px; text-align:center;
+  .done .check {
+    background: #6a5acd;
   }
-  .timer .label2 { font-size:12px; opacity:.7; letter-spacing:2px; text-transform:uppercase; }
-  .time { font-size:54px; font-weight:800; margin:10px 0; font-variant-numeric:tabular-nums; }
-  .tbtns { display:flex; gap:10px; justify-content:center; margin-top:8px; }
-  .tbtn {
-    border:none; border-radius:22px; padding:10px 22px; font-size:14px; font-weight:600; cursor:pointer;
+  .check::after {
+    content: "";
+    width: 8px; height: 14px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+    display: none;
+    margin: -4px 2px 0 0;
   }
-  .tbtn.start { background:#7c3aed; color:#fff; }
-  .tbtn.reset { background:rgba(255,255,255,.15); color:#fff; }
-  .mode-switch { display:flex; gap:8px; justify-content:center; margin-bottom:8px; }
-  .mode-switch button {
-    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15);
-    color:#d1d5db; border-radius:20px; padding:6px 16px; font-size:12px; cursor:pointer;
+  .done .check::after { display: block; }
+  .text {
+    flex: 1;
+    font-size: 15px;
+    word-break: break-word;
   }
-  .mode-switch button.active { background:#7c3aed; color:#fff; border-color:#7c3aed; }
-
-  .toast {
-    position:fixed; left:50%; bottom:30px; transform:translateX(-50%) translateY(100px);
-    background:#7c3aed; color:#fff; padding:12px 22px; border-radius:30px;
-    font-size:14px; transition:transform .3s; z-index:99; box-shadow:0 6px 20px rgba(0,0,0,.3);
+  .del {
+    background: #ffe5e5;
+    color: #d33;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
   }
-  .toast.show { transform:translateX(-50%) translateY(0); }
+  .empty {
+    text-align: center;
+    opacity: 0.7;
+    font-size: 14px;
+    padding: 30px 0;
+  }
 </style>
 </head>
 <body>
   <div class="header">
-    <div>
-      <div class="title">今日专注</div>
-      <div class="date" id="date"></div>
-    </div>
-    <div style="font-size:30px">🍅</div>
+    <h1>我的待办清单</h1>
+    <p id="subtitle">今天也要加油哦</p>
   </div>
 
-  <div class="stats">
-    <div class="card purple">
-      <div class="num" id="pomoCount">0</div>
-      <div class="label">今日番茄</div>
-    </div>
-    <div class="card green">
-      <div class="num" id="doneCount">0</div>
-      <div class="label">完成事项</div>
-    </div>
+  <div class="input-row">
+    <input id="todoInput" type="text" placeholder="写下要做的事…" />
+    <button id="addBtn">＋</button>
   </div>
 
-  <div class="section">
-    <h2>待办事项 <span id="todoTotal" style="font-size:12px;opacity:.6"></span></h2>
-    <div class="add-row">
-      <input type="text" id="todoInput" placeholder="添加新任务…" maxlength="60">
-      <button class="primary" id="addBtn">添加</button>
-    </div>
-    <ul class="todo" id="todoList"></ul>
-    <div class="empty" id="emptyTip">暂无任务，添加一个吧 ✨</div>
-  </div>
+  <div class="stats" id="stats">共 0 项</div>
 
-  <div class="section">
-    <h2>番茄钟</h2>
-    <div class="timer">
-      <div class="mode-switch">
-        <button id="m25" class="active">专注 25' </button>
-        <button id="m5">休息 5'</button>
-        <button id="m15">长休 15'</button>
-      </div>
-      <div class="time" id="timeDisplay">25:00</div>
-      <div class="tbtns">
-        <button class="tbtn start" id="toggleBtn">开始</button>
-        <button class="tbtn reset" id="resetBtn">重置</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
+  <ul id="list"></ul>
 
 <script>
-  // date
-  const d = new Date();
-  const wd = ['日','一','二','三','四','五','六'][d.getDay()];
-  document.getElementById('date').textContent = `${d.getMonth()+1}月${d.getDate()}日 周${wd}`;
+  const KEY = "todos_v1";
+  let todos = [];
 
-  // ---------- TODO ----------
-  let todos = JSON.parse(localStorage.getItem('todos')||'[]');
-  const list = document.getElementById('todoList');
-  const emptyTip = document.getElementById('emptyTip');
-  const input = document.getElementById('todoInput');
+  const input = document.getElementById("todoInput");
+  const addBtn = document.getElementById("addBtn");
+  const listEl = document.getElementById("list");
+  const statsEl = document.getElementById("stats");
 
-  function save(){ localStorage.setItem('todos', JSON.stringify(todos)); }
-  function render(){
-    list.innerHTML='';
-    todos.forEach((t,i)=>{
-      const li=document.createElement('li');
-      li.className='todo-item'+(t.done?' done':'');
-      li.innerHTML=`<div class="check"></div><div class="txt">${escapeHtml(t.text)}</div><button class="del">✕</button>`;
-      li.querySelector('.check').onclick=()=>{ t.done=!t.done; save(); render(); };
-      li.querySelector('.del').onclick=()=>{ todos.splice(i,1); save(); render(); };
-      list.appendChild(li);
-    });
-    document.getElementById('emptyTip').style.display = todos.length? 'none':'block';
-    document.getElementById('todoTotal').textContent = todos.length? `${todos.filter(t=>!t.done).length}/${todos.length}`:'';
-    document.getElementById('doneCount').textContent = todos.filter(t=>t.done).length;
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      todos = raw ? JSON.parse(raw) : [];
+    } catch (e) { todos = []; }
   }
-  function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  function addTodo(){
-    const v=input.value.trim();
-    if(!v){ toast('请输入内容'); return; }
-    todos.push({text:v,done:false});
-    input.value='';
-    save(); render();
-    toast('已添加 ✓');
+  function save() {
+    localStorage.setItem(KEY, JSON.stringify(todos));
   }
-  document.getElementById('addBtn').onclick=addTodo;
-  input.addEventListener('keydown',e=>{ if(e.key==='Enter') addTodo(); });
-
-  // ---------- TIMER ----------
-  const DURS={focus:25*60, short:5*60, long:15*60};
-  let mode='focus', total=DURS[mode], remaining=total, running=false, timerId=null;
-  const timeDisplay=document.getElementById('timeDisplay');
-  const toggleBtn=document.getElementById('toggleBtn');
-  let pomos=parseInt(localStorage.getItem('pomos')||'0');
-  document.getElementById('pomoCount').textContent=pomos;
-
-  function fmt(s){ const m=Math.floor(s/60), ss=s%60; return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; }
-  function paint(){ timeDisplay.textContent=fmt(remaining); }
-  function setMode(m){
-    if(running) return;
-    mode=m; total=DURS[m]; remaining=total; paint();
-    document.querySelectorAll('.mode-switch button').forEach(b=>b.classList.remove('active'));
-    document.getElementById('m'+(m==='focus'?'25':m==='short'?'5':'15')).classList.add('active');
-  }
-  function toggle(){
-    if(running){
-      clearInterval(timerId); running=false; toggleBtn.textContent='继续';
+  function render() {
+    listEl.innerHTML = "";
+    if (todos.length === 0) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.style.background = "transparent";
+      li.style.boxShadow = "none";
+      li.textContent = "还没有待办事项，添加一个吧 ✨";
+      listEl.appendChild(li);
     } else {
-      running=true; toggleBtn.textContent='暂停';
-      timerId=setInterval(()=>{
-        remaining--;
-        if(remaining<=0){
-          clearInterval(timerId); running=false; toggleBtn.textContent='开始';
-          if(mode==='focus'){ pomos++; localStorage.setItem('pomos',String(pomos)); document.getElementById('pomoCount').textContent=pomos; toast('🎉 一个番茄完成！'); }
-          else toast('休息结束，继续加油！');
-          remaining=0; paint();
-        } else paint();
-      },1000);
+      todos.forEach((t, i) => {
+        const li = document.createElement("li");
+        if (t.done) li.classList.add("done");
+
+        const check = document.createElement("div");
+        check.className = "check";
+        check.onclick = () => {
+          todos[i].done = !todos[i].done;
+          save();
+          render();
+        };
+
+        const text = document.createElement("div");
+        text.className = "text";
+        text.textContent = t.text;
+
+        const del = document.createElement("button");
+        del.className = "del";
+        del.textContent = "删除";
+        del.onclick = () => {
+          todos.splice(i, 1);
+          save();
+          render();
+        };
+
+        li.appendChild(check);
+        li.appendChild(text);
+        li.appendChild(del);
+        listEl.appendChild(li);
+      });
     }
-  }
-  function reset(){ clearInterval(timerId); running=false; toggleBtn.textContent='开始'; remaining=total; paint(); }
-  toggleBtn.onclick=toggle;
-  document.getElementById('resetBtn').onclick=reset;
-  document.getElementById('m25').onclick=()=>setMode('focus');
-  document.getElementById('m5').onclick=()=>setMode('short');
-  document.getElementById('m15').onclick=()=>setMode('long');
-
-  // toast
-  let toastTimer;
-  function toast(msg){
-    const el=document.getElementById('toast');
-    el.textContent=msg; el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer=setTimeout(()=>el.classList.remove('show'),1800);
+    const done = todos.filter(t => t.done).length;
+    statsEl.textContent = todos.length === 0
+      ? "共 0 项"
+      : `共 ${todos.length} 项，已完成 ${done} 项`;
   }
 
-  render(); paint();
+  function addTodo() {
+    const v = input.value.trim();
+    if (!v) return;
+    todos.push({ text: v, done: false });
+    input.value = "";
+    save();
+    render();
+  }
+
+  addBtn.onclick = addTodo;
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") addTodo();
+  });
+
+  load();
+  render();
 </script>
 </body>
 </html>
