@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  // 使用独立的 storage key，确保即使与旧版混淆也不会读取到旧数据
-  const STORAGE_KEY = "notes.v1.0.1.ag";
+  // 独立 storage key，确保与旧版数据完全隔离
+  const STORAGE_KEY = "agnotes.v1.0.1";
   const titleInput = document.getElementById("title");
   const contentInput = document.getElementById("content");
   const saveBtn = document.getElementById("saveBtn");
@@ -104,7 +104,6 @@
 
   saveBtn.addEventListener("click", addNote);
 
-  // 支持 Ctrl/Cmd + Enter 快速保存
   contentInput.addEventListener("keydown", e => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
