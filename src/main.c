@@ -1,2 +1,2 @@
 #include <stdio.h>
-int main(){ printf("hi"); return 0; }
+int main(){ printf("manual put test"); return 0; }
