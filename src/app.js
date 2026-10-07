@@ -44,4 +44,33 @@
     notes.forEach(n => {
       const card = document.createElement("div");
       card.className = "card";
-      const h = document.createElement
+      const h = document.createElement("h3"); h.textContent = n.title || "未命名";
+      const p = document.createElement("p"); p.textContent = n.content;
+      const t = document.createElement("span"); t.className = "time"; t.textContent = fmtTime(n.ts);
+      const del = document.createElement("button");
+      del.className = "del"; del.textContent = "×";
+      del.setAttribute("aria-label", "删除");
+      del.addEventListener("click", () => {
+        notes = notes.filter(x => x.id !== n.id);
+        save(); render(); toastShow("已删除");
+      });
+      card.appendChild(h); card.appendChild(p); card.appendChild(t); card.appendChild(del);
+      listEl.appendChild(card);
+    });
+  }
+  function addNote() {
+    const title = titleInput.value.trim();
+    const content = contentInput.value.trim();
+    if (!content) { toastShow("内容不能为空"); contentInput.focus(); return; }
+    notes.unshift({ id: uid(), title, content, ts: Date.now() });
+    save(); render();
+    titleInput.value = ""; contentInput.value = ""; contentInput.focus();
+    toastShow("已保存 ✅");
+  }
+  saveBtn.addEventListener("click", addNote);
+  contentInput.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); addNote(); }
+  });
+  clearBtn.addEventListener("click", () => { titleInput.value = ""; contentInput.value = ""; titleInput.focus(); });
+  render();
+})();
