@@ -1,12 +1,7 @@
-Verifies
-Verified using v1 scheme (JAR signing): false
-Verified using v2 scheme (APK Signature Scheme v2): true
-Verified using v3 scheme (APK Signature Scheme v3): true
-Verified using v3.1 scheme (APK Signature Scheme v3.1): false
-Verified using v3.2 scheme (APK Signature Scheme v3.2): false
-Verified using v4 scheme (APK Signature Scheme v4): false
-Verified for SourceStamp: false
-Number of signers: 1
-
-APK_SIZE: 21001
-BUILD_OK
+src/main.c: In function ‘WinMain’:
+src/main.c:4:51: warning: unused parameter ‘hPrevInstance’ [-Wunused-parameter]
+    4 | int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+      |                                         ~~~~~~~~~~^~~~~~~~~~~~~
+src/main.c:4:72: warning: unused parameter ‘lpCmdLine’ [-Wunused-parameter]
+    4 | int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+      |                                                                  ~~~~~~^~~~~~~~~
