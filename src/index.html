@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>番茄钟</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{
+    height:100%; overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif;
+    background:linear-gradient(160deg,#ff9a56 0%,#ff6a3d 45%,#e83e8c 100%);
+    color:#fff;
+    user-select:none;
+  }
+  body{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; padding:24px; }
+  .mode{ font-size:15px; letter-spacing:2px; opacity:.9; font-weight:600; }
+  .mode span{ padding:6px 16px; border:2px solid rgba(255,255,255,.55); border-radius:999px; }
+  .timer{ position:relative; width:min(78vw,320px); height:min(78vw,320px); display:flex; align-items:center; justify-content:center; }
+  .ring{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  .ring circle{ fill:none; stroke-width:10; }
+  .ring .bg{ stroke:rgba(255,255,255,.25); }
+  .ring .fg{ stroke:#fff; stroke-linecap:round; transition:stroke-dashoffset .5s linear; }
+  .center{ text-align:center; }
+  .time{ font-size:56px; font-weight:700; letter-spacing:2px; font-variant-numeric:tabular-nums; }
+  .label{ font-size:13px; opacity:.85; margin-top:6px; letter-spacing:1px; }
+  .stats{ font-size:14px; opacity:.9; }
+  .stats b{ font-size:18px; }
+  .controls{ display:flex; gap:16px; }
+  button{
+    border:none; outline:none; cursor:pointer;
+    font-size:17px; font-weight:600; color:#fff;
+    padding:14px 30px; border-radius:999px;
+    background:rgba(255,255,255,.22);
+    backdrop-filter:blur(4px);
+    transition:transform .12s ease, background .2s;
+  }
+  button:active{ transform:scale(.94); background:rgba(255,255,255,.4); }
+  button.primary{ background:#fff; color:#e83e8c; }
+  .hint{ font-size:12px; opacity:.6; }
+  @keyframes pulse{ 0%,100%{opacity:.5} 50%{opacity:1} }
+  .blinking{ animation:pulse 1s ease-in-out infinite; }
+</style>
+</head>
+<body>
+  <div class="mode" id="mode"><span>专注 25 分钟</span></div>
+
+  <div class="timer">
+    <svg class="ring" viewBox="0 0 200 200">
+      <circle class="bg" cx="100" cy="100" r="90"></circle>
+      <circle class="fg" id="fg" cx="100" cy="100" r="90"></circle>
+    </svg>
+    <div class="center">
+      <div class="time" id="time">25:00</div>
+      <div class="label" id="label">准备开始</div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">已完成 <b>0</b> 个番茄</div>
+
+  <div class="controls">
+    <button class="primary" id="startBtn">开始</button>
+    <button id="resetBtn">重置</button>
+  </div>
+
+  <div class="hint" id="hint"></div>
+
+<script>
+(function(){
+  var FOCUS = 25*60;
+  var REST = 5*60;
+  var CIRC = 2 * Math.PI * 90;
+
+  var fg = document.getElementById('fg');
+  fg.style.strokeDasharray = CIRC;
+  fg.style.strokeDashoffset = 0;
+
+  var timeEl = document.getElementById('time');
+  var labelEl = document.getElementById('label');
+  var modeEl = document.getElementById('mode');
+  var statsEl = document.getElementById('stats');
+  var startBtn = document.getElementById('startBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var hintEl = document.getElementById('hint');
+
+  var isFocus = true;
+  var remain = FOCUS;
+  var total = isFocus ? FOCUS : REST;
+  var running = false;
+  var timer = null;
+  var done = 0;
+
+  function pad(n){ return (n<10?'0':'')+n; }
+
+  function render(){
+    var m = Math.floor(remain/60);
+    var s = remain%60;
+    timeEl.textContent = pad(m)+':'+pad(s);
+    var prog = 1 - remain/total;
+    fg.style.strokeDashoffset = CIRC * (1 - prog);
+  }
+
+  function setModeText(){
+    modeEl.querySelector('span').textContent = isFocus ? '专注 25 分钟' : '休息 5 分钟';
+    labelEl.textContent = running ? (isFocus?'专注中':'休息中') : (remain===total?'准备开始':'已暂停');
+  }
+
+  function updateStats(){
+    statsEl.innerHTML = '已完成 <b>'+done+'</b> 个番茄';
+  }
+
+  function beep(){
+    try{
+      var ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine'; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.8);
+      o.start(); o.stop(ctx.currentTime+0.85);
+    }catch(e){}
+  }
+
+  function tick(){
+    if(!running) return;
+    if(remain>0){
+      remain--;
+    } else {
+      // 阶段结束
+      beep();
+      if(isFocus){
+        done++;
+        isFocus = false;
+        total = REST;
+        remain = REST;
+        hintEl.textContent = '';
+      } else {
+        isFocus = true;
+        total = FOCUS;
+        remain = FOCUS;
+        hintEl.textContent = '休息结束，开始新专注！';
+      }
+      updateStats();
+    }
+    setModeText();
+    render();
+    timeEl.classList.toggle('blinking', remain===0 && running===false);
+  }
+
+  function start(){
+    running = true;
+    timeEl.classList.remove('blinking');
+    startBtn.textContent = '暂停';
+    timer = setInterval(tick, 1000);
+    setModeText();
+  }
+
+  function pause(){
+    running = false;
+    startBtn.textContent = '继续';
+    clearInterval(timer);
+    setModeText();
+  }
+
+  function reset(){
+    running = false;
+    clearInterval(timer);
+    startBtn.textContent = '开始';
+    isFocus = true;
+    total = FOCUS;
+    remain = FOCUS;
+    timeEl.classList.remove('blinking');
+    hintEl.textContent = '';
+    setModeText();
+    render();
+  }
+
+  startBtn.addEventListener('click', function(){ running ? pause() : start(); });
+  resetBtn.addEventListener('click', reset);
+
+  setModeText();
+  render();
+})();
+</script>
+</body>
+</html>
