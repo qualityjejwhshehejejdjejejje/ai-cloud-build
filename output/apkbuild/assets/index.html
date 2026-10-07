@@ -1,188 +1,311 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>番茄钟</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{
-    height:100%; overflow:hidden;
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif;
-    background:linear-gradient(160deg,#ff9a56 0%,#ff6a3d 45%,#e83e8c 100%);
-    color:#fff;
-    user-select:none;
-  }
-  body{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; padding:24px; }
-  .mode{ font-size:15px; letter-spacing:2px; opacity:.9; font-weight:600; }
-  .mode span{ padding:6px 16px; border:2px solid rgba(255,255,255,.55); border-radius:999px; }
-  .timer{ position:relative; width:min(78vw,320px); height:min(78vw,320px); display:flex; align-items:center; justify-content:center; }
-  .ring{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
-  .ring circle{ fill:none; stroke-width:10; }
-  .ring .bg{ stroke:rgba(255,255,255,.25); }
-  .ring .fg{ stroke:#fff; stroke-linecap:round; transition:stroke-dashoffset .5s linear; }
-  .center{ text-align:center; }
-  .time{ font-size:56px; font-weight:700; letter-spacing:2px; font-variant-numeric:tabular-nums; }
-  .label{ font-size:13px; opacity:.85; margin-top:6px; letter-spacing:1px; }
-  .stats{ font-size:14px; opacity:.9; }
-  .stats b{ font-size:18px; }
-  .controls{ display:flex; gap:16px; }
-  button{
-    border:none; outline:none; cursor:pointer;
-    font-size:17px; font-weight:600; color:#fff;
-    padding:14px 30px; border-radius:999px;
-    background:rgba(255,255,255,.22);
-    backdrop-filter:blur(4px);
-    transition:transform .12s ease, background .2s;
-  }
-  button:active{ transform:scale(.94); background:rgba(255,255,255,.4); }
-  button.primary{ background:#fff; color:#e83e8c; }
-  .hint{ font-size:12px; opacity:.6; }
-  @keyframes pulse{ 0%,100%{opacity:.5} 50%{opacity:1} }
-  .blinking{ animation:pulse 1s ease-in-out infinite; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            overflow: hidden;
+        }
+        .calculator {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+        }
+        .display {
+            background: rgba(0,0,0,0.4);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: right;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .expression {
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            margin-bottom: 8px;
+            min-height: 20px;
+            word-wrap: break-word;
+        }
+        .result {
+            color: #ffffff;
+            font-size: 36px;
+            font-weight: 300;
+            word-wrap: break-word;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
+            font-size: 20px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active {
+            transform: scale(0.95);
+            background: rgba(255,255,255,0.2);
+        }
+        .btn.operator {
+            background: rgba(102,178,255,0.3);
+            color: #66b3ff;
+        }
+        .btn.operator:active {
+            background: rgba(102,178,255,0.5);
+        }
+        .btn.equals {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        .btn.equals:active {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4595 100%);
+        }
+        .btn.clear {
+            background: rgba(255,107,107,0.2);
+            color: #ff6b6b;
+        }
+        .btn.clear:active {
+            background: rgba(255,107,107,0.4);
+        }
+        .btn.delete {
+            background: rgba(255,193,7,0.2);
+            color: #ffc107;
+        }
+        .btn.delete:active {
+            background: rgba(255,193,7,0.4);
+        }
+        .history {
+            max-height: 120px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .history-item {
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            margin-bottom: 4px;
+            text-align: right;
+            word-wrap: break-word;
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 0 4px;
+        }
+        .history-header span {
+            color: rgba(255,255,255,0.4);
+            font-size: 12px;
+        }
+        .clear-history {
+            background: none;
+            border: none;
+            color: rgba(255,107,107,0.6);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .clear-history:active {
+            background: rgba(255,107,107,0.1);
+        }
+        .toggle-history {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px;
+        }
+    </style>
 </head>
 <body>
-  <div class="mode" id="mode"><span>专注 25 分钟</span></div>
+    <div class="calculator">
+        <div class="history" id="history"></div>
+        <div class="display">
+            <div class="expression" id="expression"></div>
+            <div class="result" id="result">0</div>
+        </div>
+        <div class="buttons">
+            <button class="btn clear" onclick="clearAll()">C</button>
+            <button class="btn delete" onclick="deleteLast()">⌫</button>
+            <button class="btn operator" onclick="press('(')">(</button>
+            <button class="btn operator" onclick="press(')')">)</button>
 
-  <div class="timer">
-    <svg class="ring" viewBox="0 0 200 200">
-      <circle class="bg" cx="100" cy="100" r="90"></circle>
-      <circle class="fg" id="fg" cx="100" cy="100" r="90"></circle>
-    </svg>
-    <div class="center">
-      <div class="time" id="time">25:00</div>
-      <div class="label" id="label">准备开始</div>
+            <button class="btn" onclick="press('7')">7</button>
+            <button class="btn" onclick="press('8')">8</button>
+            <button class="btn" onclick="press('9')">9</button>
+            <button class="btn operator" onclick="press('/')">÷</button>
+
+            <button class="btn" onclick="press('4')">4</button>
+            <button class="btn" onclick="press('5')">5</button>
+            <button class="btn" onclick="press('6')">6</button>
+            <button class="btn operator" onclick="press('*')">×</button>
+
+            <button class="btn" onclick="press('1')">1</button>
+            <button class="btn" onclick="press('2')">2</button>
+            <button class="btn" onclick="press('3')">3</button>
+            <button class="btn operator" onclick="press('-')">−</button>
+
+            <button class="btn" onclick="press('0')">0</button>
+            <button class="btn" onclick="press('.')">.</button>
+            <button class="btn operator" onclick="press('+')">+</button>
+            <button class="btn equals" onclick="calculate()">=</button>
+        </div>
     </div>
-  </div>
 
-  <div class="stats" id="stats">已完成 <b>0</b> 个番茄</div>
+    <script>
+        let expression = '';
+        let lastResult = '';
+        let justCalculated = false;
+        let history = [];
 
-  <div class="controls">
-    <button class="primary" id="startBtn">开始</button>
-    <button id="resetBtn">重置</button>
-  </div>
+        const resultEl = document.getElementById('result');
+        const expressionEl = document.getElementById('expression');
+        const historyEl = document.getElementById('history');
 
-  <div class="hint" id="hint"></div>
+        function press(char) {
+            if (justCalculated && !isNaN(char)) {
+                expression = '';
+                justCalculated = false;
+            }
+            expression += char;
+            expressionEl.textContent = expression;
+            resultEl.textContent = '0';
+        }
 
-<script>
-(function(){
-  var FOCUS = 25*60;
-  var REST = 5*60;
-  var CIRC = 2 * Math.PI * 90;
+        function calculate() {
+            if (!expression.trim()) return;
+            try {
+                let safeExpression = expression.replace(/\//g, '/').replace(/\*/g, '*');
+                let result = Function('"use strict"; return (' + safeExpression + ')')();
+                
+                if (typeof result !== 'number' || isNaN(result) || !isFinite(result)) {
+                    resultEl.textContent = '错误';
+                    expression = '';
+                    expressionEl.textContent = '';
+                    justCalculated = false;
+                    return;
+                }
 
-  var fg = document.getElementById('fg');
-  fg.style.strokeDasharray = CIRC;
-  fg.style.strokeDashoffset = 0;
+                // 格式化结果
+                let displayResult = formatNumber(result);
+                
+                // 添加到历史
+                let historyEntry = expression + ' = ' + displayResult;
+                history.unshift(historyEntry);
+                if (history.length > 10) history.pop();
+                renderHistory();
 
-  var timeEl = document.getElementById('time');
-  var labelEl = document.getElementById('label');
-  var modeEl = document.getElementById('mode');
-  var statsEl = document.getElementById('stats');
-  var startBtn = document.getElementById('startBtn');
-  var resetBtn = document.getElementById('resetBtn');
-  var hintEl = document.getElementById('hint');
+                lastResult = displayResult;
+                expressionEl.textContent = expression + ' =';
+                resultEl.textContent = displayResult;
+                expression = '';
+                justCalculated = true;
 
-  var isFocus = true;
-  var remain = FOCUS;
-  var total = isFocus ? FOCUS : REST;
-  var running = false;
-  var timer = null;
-  var done = 0;
+            } catch (e) {
+                resultEl.textContent = '错误';
+                expression = '';
+                expressionEl.textContent = '';
+                justCalculated = false;
+            }
+        }
 
-  function pad(n){ return (n<10?'0':'')+n; }
+        function formatNumber(num) {
+            if (num === 0) return '0';
+            // 如果数字太大或太小，用科学计数法
+            if (Math.abs(num) >= 1e15 || (Math.abs(num) < 1e-10 && num !== 0)) {
+                return num.toExponential(8).replace(/\.?0+e/, 'e');
+            }
+            // 处理浮点精度问题
+            let str = parseFloat(num.toPrecision(12)).toString();
+            if (str.length > 15) {
+                str = parseFloat(num.toPrecision(10)).toString();
+            }
+            return str;
+        }
 
-  function render(){
-    var m = Math.floor(remain/60);
-    var s = remain%60;
-    timeEl.textContent = pad(m)+':'+pad(s);
-    var prog = 1 - remain/total;
-    fg.style.strokeDashoffset = CIRC * (1 - prog);
-  }
+        function clearAll() {
+            expression = '';
+            lastResult = '';
+            justCalculated = false;
+            expressionEl.textContent = '';
+            resultEl.textContent = '0';
+        }
 
-  function setModeText(){
-    modeEl.querySelector('span').textContent = isFocus ? '专注 25 分钟' : '休息 5 分钟';
-    labelEl.textContent = running ? (isFocus?'专注中':'休息中') : (remain===total?'准备开始':'已暂停');
-  }
+        function deleteLast() {
+            if (justCalculated) {
+                clearAll();
+                return;
+            }
+            expression = expression.slice(0, -1);
+            expressionEl.textContent = expression;
+            resultEl.textContent = '0';
+        }
 
-  function updateStats(){
-    statsEl.innerHTML = '已完成 <b>'+done+'</b> 个番茄';
-  }
+        function renderHistory() {
+            if (history.length === 0) {
+                historyEl.style.display = 'none';
+                historyEl.innerHTML = '';
+                return;
+            }
+            historyEl.style.display = 'block';
+            let html = '<div class="history-header"><span>历史</span><button class="clear-history" onclick="clearHistory()">清除</button></div>';
+            for (let i = 0; i < history.length; i++) {
+                html += '<div class="history-item" onclick="useHistory(' + i + ')">' + history[i] + '</div>';
+            }
+            historyEl.innerHTML = html;
+        }
 
-  function beep(){
-    try{
-      var ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
-      var o = ctx.createOscillator();
-      var g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = 'sine'; o.frequency.value = 880;
-      g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime+0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.8);
-      o.start(); o.stop(ctx.currentTime+0.85);
-    }catch(e){}
-  }
+        function clearHistory() {
+            history = [];
+            renderHistory();
+        }
 
-  function tick(){
-    if(!running) return;
-    if(remain>0){
-      remain--;
-    } else {
-      // 阶段结束
-      beep();
-      if(isFocus){
-        done++;
-        isFocus = false;
-        total = REST;
-        remain = REST;
-        hintEl.textContent = '';
-      } else {
-        isFocus = true;
-        total = FOCUS;
-        remain = FOCUS;
-        hintEl.textContent = '休息结束，开始新专注！';
-      }
-      updateStats();
-    }
-    setModeText();
-    render();
-    timeEl.classList.toggle('blinking', remain===0 && running===false);
-  }
-
-  function start(){
-    running = true;
-    timeEl.classList.remove('blinking');
-    startBtn.textContent = '暂停';
-    timer = setInterval(tick, 1000);
-    setModeText();
-  }
-
-  function pause(){
-    running = false;
-    startBtn.textContent = '继续';
-    clearInterval(timer);
-    setModeText();
-  }
-
-  function reset(){
-    running = false;
-    clearInterval(timer);
-    startBtn.textContent = '开始';
-    isFocus = true;
-    total = FOCUS;
-    remain = FOCUS;
-    timeEl.classList.remove('blinking');
-    hintEl.textContent = '';
-    setModeText();
-    render();
-  }
-
-  startBtn.addEventListener('click', function(){ running ? pause() : start(); });
-  resetBtn.addEventListener('click', reset);
-
-  setModeText();
-  render();
-})();
-</script>
+        function useHistory(index) {
+            let entry = history[index];
+            let parts = entry.split('=');
+            if (parts.length >= 2) {
+                let resultStr = parts[1].trim();
+                if (!isNaN(resultStr)) {
+                    expression = resultStr;
+                    justCalculated = false;
+                    expressionEl.textContent = resultStr;
+                    resultEl.textContent = '0';
+                }
+            }
+        }
+    </script>
 </body>
 </html>
