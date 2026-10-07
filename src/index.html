@@ -67,4 +67,152 @@
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn:active
+    .btn:active {
+      transform: scale(0.95);
+    }
+    .btn-num {
+      background: #4a4a4a;
+      color: white;
+    }
+    .btn-op {
+      background: #ff9800;
+      color: white;
+    }
+    .btn-func {
+      background: #9e9e9e;
+      color: white;
+    }
+    .btn-eq {
+      background: #4caf50;
+      color: white;
+      grid-column: span 2;
+    }
+    .note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-title">趣味计算器</div>
+  <div class="card">
+    <div class="display" id="display">0</div>
+    <div class="btn-grid">
+      <button class="btn btn-func" onclick="clearAll()">C</button>
+      <button class="btn btn-func" onclick="backspace()">⌫</button>
+      <button class="btn btn-op" onclick="appendOp('%')">%</button>
+      <button class="btn btn-op" onclick="appendOp('/')">÷</button>
+
+      <button class="btn btn-num" onclick="appendNum('7')">7</button>
+      <button class="btn btn-num" onclick="appendNum('8')">8</button>
+      <button class="btn btn-num" onclick="appendNum('9')">9</button>
+      <button class="btn btn-op" onclick="appendOp('*')">×</button>
+
+      <button class="btn btn-num" onclick="appendNum('4')">4</button>
+      <button class="btn btn-num" onclick="appendNum('5')">5</button>
+      <button class="btn btn-num" onclick="appendNum('6')">6</button>
+      <button class="btn btn-op" onclick="appendOp('-')">−</button>
+
+      <button class="btn btn-num" onclick="appendNum('1')">1</button>
+      <button class="btn btn-num" onclick="appendNum('2')">2</button>
+      <button class="btn btn-num" onclick="appendNum('3')">3</button>
+      <button class="btn btn-op" onclick="appendOp('+')">+</button>
+
+      <button class="btn btn-num" onclick="appendNum('0')">0</button>
+      <button class="btn btn-num" onclick="appendNum('.')">.</button>
+      <button class="btn btn-eq" onclick="calculate()">=</button>
+    </div>
+    <div class="note">支持 +、−、×、÷、% 运算</div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    let current = '0';
+    let justCalculated = false;
+
+    function updateDisplay() {
+      display.textContent = current;
+    }
+
+    function appendNum(num) {
+      if (justCalculated) {
+        current = num === '.' ? '0.' : num;
+        justCalculated = false;
+      } else if (num === '.') {
+        if (current.includes('.')) return;
+        if (current === '0') current = '0.';
+        else current += '.';
+      } else {
+        if (current === '0' && num !== '.') current = num;
+        else current += num;
+      }
+      updateDisplay();
+    }
+
+    function appendOp(op) {
+      if (justCalculated) {
+        current = current;
+        justCalculated = false;
+      }
+      if (current === '' || current === '0') {
+        current = current;
+      }
+      // Avoid double operators at end
+      const lastChar = current.slice(-1);
+      if (['+','-','*','/','%'].includes(lastChar)) {
+        current = current.slice(0, -1) + op;
+      } else {
+        current += op;
+      }
+      updateDisplay();
+    }
+
+    function clearAll() {
+      current = '0';
+      justCalculated = false;
+      updateDisplay();
+    }
+
+    function backspace() {
+      if (justCalculated) {
+        clearAll();
+        return;
+      }
+      current = current.slice(0, -1);
+      if (current === '' || current === '-') current = '0';
+      updateDisplay();
+    }
+
+    function calculate() {
+      try {
+        // Replace % with /100 for percentage
+        let expr = current.replace(/%/g, '/100');
+        // Only allow safe characters
+        if (!/^[\d+\-*/.() ]+$/.test(expr)) throw new Error('Invalid expression');
+        let result = eval(expr);
+        if (result === undefined || result === null || isNaN(result) || !isFinite(result)) {
+          current = '错误';
+        } else {
+          // Round to avoid floating point artifacts
+          result = Math.round(result * 100000000) / 100000000;
+          current = String(result);
+        }
+        justCalculated = true;
+        updateDisplay();
+      } catch (e) {
+        current = '错误';
+        justCalculated = true;
+        updateDisplay();
+      }
+    }
+
+    // Prevent double-tap zoom on mobile
+    document.addEventListener('touchend', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, false);
+  </script>
+</body>
+</html>
