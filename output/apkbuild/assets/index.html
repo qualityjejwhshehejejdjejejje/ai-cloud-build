@@ -1,217 +1,217 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>我的待办清单</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(160deg, #6a5acd, #4834d4);
-    min-height: 100vh;
-    padding: 20px 16px 80px;
-    color: #fff;
-  }
-  .header {
-    text-align: center;
-    margin-bottom: 16px;
-  }
-  .header h1 { font-size: 26px; font-weight: 600; }
-  .header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }
-
-  .input-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  #todoInput {
-    flex: 1;
-    padding: 14px;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    background: rgba(255,255,255,0.95);
-    color: #333;
-    outline: none;
-  }
-  #addBtn {
-    padding: 0 22px;
-    border: none;
-    border-radius: 12px;
-    background: #ffd166;
-    color: #4a3b00;
-    font-size: 22px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .stats {
-    font-size: 13px;
-    opacity: 0.85;
-    margin-bottom: 10px;
-  }
-
-  #list { list-style: none; }
-  #list li {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(255,255,255,0.95);
-    color: #333;
-    padding: 14px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  }
-  #list li.done .text {
-    text-decoration: line-through;
-    color: #999;
-  }
-  .check {
-    width: 24px; height: 24px;
-    border: 2px solid #6a5acd;
-    border-radius: 50%;
-    flex-shrink: 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-  }
-  .done .check {
-    background: #6a5acd;
-  }
-  .check::after {
-    content: "";
-    width: 8px; height: 14px;
-    border: 2px solid #fff;
-    border-top: none;
-    border-left: none;
-    transform: rotate(45deg);
-    display: none;
-    margin: -4px 2px 0 0;
-  }
-  .done .check::after { display: block; }
-  .text {
-    flex: 1;
-    font-size: 15px;
-    word-break: break-word;
-  }
-  .del {
-    background: #ffe5e5;
-    color: #d33;
-    border: none;
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 13px;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .empty {
-    text-align: center;
-    opacity: 0.7;
-    font-size: 14px;
-    padding: 30px 0;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>便签小助手</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2430;
+      --muted: #6b7280;
+      --accent: #4f8cff;
+      --border: #e5e9f2;
+      --danger: #ef4444;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1220;
+        --card: #1a1f35;
+        --text: #eef1ff;
+        --muted: #9aa3c7;
+        --accent: #6ea8ff;
+        --border: #2a3150;
+        --danger: #ff6b6b;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+    .app {
+      width: 100%;
+      max-width: 560px;
+      padding: 16px 14px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 { font-size: 22px; margin: 0; font-weight: 700; }
+    .badge {
+      font-size: 12px; color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: 999px;
+    }
+    .stats {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .editor {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .title-row { display: flex; gap: 8px; }
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    textarea { min-height: 120px; }
+    .actions { display: flex; gap: 8px; }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform .05s ease, opacity .15s;
+    }
+    button:active { transform: scale(.98); }
+    .btn-primary { background: var(--accent); color: #fff; flex: 1; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      font-weight: 700;
+      padding-right: 30px;
+    }
+    .card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .card .time {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      opacity: .8;
+    }
+    .del {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: transparent;
+      color: var(--danger);
+      font-size: 18px;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 24px 10px;
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: var(--bg);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s, transform .2s;
+      z-index: 10;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+  </style>
 </head>
 <body>
-  <div class="header">
-    <h1>我的待办清单</h1>
-    <p id="subtitle">今天也要加油哦</p>
+  <div class="app">
+    <header>
+      <h1>📝 便签小助手</h1>
+      <span class="badge">v1.0</span>
+    </header>
+
+    <div class="stats">
+      <span>已保存便签：</span><span id="count">0</span>
+    </div>
+
+    <div class="editor">
+      <div class="title-row">
+        <input id="title" type="text" placeholder="标题（可选）" maxlength="40" />
+      </div>
+      <textarea id="content" placeholder="在这里写点想记住的事…"></textarea>
+      <div class="actions">
+        <button class="btn-primary" id="saveBtn">保存</button>
+        <button class="btn-ghost" id="clearBtn">清空输入</button>
+      </div>
+    </div>
+
+    <div class="list" id="list"></div>
+    <footer>数据仅保存在本机 · 刷新不丢失</footer>
   </div>
 
-  <div class="input-row">
-    <input id="todoInput" type="text" placeholder="写下要做的事…" />
-    <button id="addBtn">＋</button>
-  </div>
-
-  <div class="stats" id="stats">共 0 项</div>
-
-  <ul id="list"></ul>
-
-<script>
-  const KEY = "todos_v1";
-  let todos = [];
-
-  const input = document.getElementById("todoInput");
-  const addBtn = document.getElementById("addBtn");
-  const listEl = document.getElementById("list");
-  const statsEl = document.getElementById("stats");
-
-  function load() {
-    try {
-      const raw = localStorage.getItem(KEY);
-      todos = raw ? JSON.parse(raw) : [];
-    } catch (e) { todos = []; }
-  }
-  function save() {
-    localStorage.setItem(KEY, JSON.stringify(todos));
-  }
-  function render() {
-    listEl.innerHTML = "";
-    if (todos.length === 0) {
-      const li = document.createElement("li");
-      li.className = "empty";
-      li.style.background = "transparent";
-      li.style.boxShadow = "none";
-      li.textContent = "还没有待办事项，添加一个吧 ✨";
-      listEl.appendChild(li);
-    } else {
-      todos.forEach((t, i) => {
-        const li = document.createElement("li");
-        if (t.done) li.classList.add("done");
-
-        const check = document.createElement("div");
-        check.className = "check";
-        check.onclick = () => {
-          todos[i].done = !todos[i].done;
-          save();
-          render();
-        };
-
-        const text = document.createElement("div");
-        text.className = "text";
-        text.textContent = t.text;
-
-        const del = document.createElement("button");
-        del.className = "del";
-        del.textContent = "删除";
-        del.onclick = () => {
-          todos.splice(i, 1);
-          save();
-          render();
-        };
-
-        li.appendChild(check);
-        li.appendChild(text);
-        li.appendChild(del);
-        listEl.appendChild(li);
-      });
-    }
-    const done = todos.filter(t => t.done).length;
-    statsEl.textContent = todos.length === 0
-      ? "共 0 项"
-      : `共 ${todos.length} 项，已完成 ${done} 项`;
-  }
-
-  function addTodo() {
-    const v = input.value.trim();
-    if (!v) return;
-    todos.push({ text: v, done: false });
-    input.value = "";
-    save();
-    render();
-  }
-
-  addBtn.onclick = addTodo;
-  input.addEventListener("keydown", e => {
-    if (e.key === "Enter") addTodo();
-  });
-
-  load();
-  render();
-</script>
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
 </body>
 </html>
